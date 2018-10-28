@@ -1,0 +1,80 @@
+# Rehearsal File Generator
+
+Plan of attack: 
+
+1. manually: create MuseScore SATB+ open score files
+2. programatically convert to MIDI (MuseScore can do this)
+3. programatically generate N (usually 4) variants of the MIDI file with the same settings that I would have in the MSC mixer
+4. optionally, programatically perform MP3 render
+
+So we're concerned with steps 2-4 here. 
+
+(2) is easily done, just find all the `.mscz`s matching some criteria and `subprocess mscore -o $outfile $infile` to convert
+(3) is doable in several ways, the easiest is probably going to be to use `midicsv` -> for each track in the file do XYZ -> `csvmidi` -> export -> cleanup
+(4) should be pretty straightforward using `timidity` or similar (will need a two step process: `timidity`: `mid` -> `wav` and then `lame`: `wav` -> `mp3`)
+
+
+# Requirements
+
+- python3.5+
+- midicsv
+- timidity
+- fluid-soundfont-gm fluid-soundfont-gs pmidi
+
+# CSV modifications 
+
+- set all track mixer volumes to half initially: `_, _, Control_c, 0, 7, 64`
+
+- Then we want to for each SATB set the instrument as a solo string instrument and make it loud
+- if a track isn't assigned to `choir aah` (`_, _, Program_c, 52`) then we don't change it at all
+- we'll need to make some assumptions about what tracks correspond to what voice part 
+- we can be intelligent about this
+- iterate over each track and look at the gamut
+- actually, average out the midi numbers of the notes
+- if average is above middle C (`60`, use a violin (`Program_c 41`)
+- if between G3 (`54`) and middle C, use a viola (`Program_c 42`)
+- if below G3, use a cello (`Program_c 43`)
+- all of these should be settable
+- for each track, set volume to max (`_, _, Control_c, 0, 7, 127`) and set instrument to whatever it should be and export
+- oh bother, how do we know which is which - this info isn't in there
+- because descants
+- for carolling at least the order is DSATB
+- or we could just guess based on how many tracks there are
+- config with labels? 
+- config with labels. 
+
+# Config file structure
+
+- three parts. 
+- one for global settings, 
+- one for defining patch find-replace (parts)
+- one for defining potential orchestration structures (layouts)
+
+
+Program_c,
+# Program operations 
+
+- First do the MSCZ->MIDI conversions
+
+- Ensure the config file makes sense, i.e. layout dependencies
+	- thank goodness those are just a DAG
+
+- Then *for each MIDI:*
+	- load it
+	- figure out if we have a layout match
+	- if not, prompt for a layout
+	- ensure that all parts are defined as part of prompting for layout
+	- *for each track* 
+	- working in a track-specific copy of the MIDI...
+	- set self's volume to ForegroundVolume, set others' volumes to BackgroundVolume
+	- find/replace on self's instruments
+	- write out as `filename_Partname_PartNumber`
+	- include a comment so we know to ignore it next time!
+
+- Then for each MIDI, convert to MP3
+
+The format conversions should be separate scripts. This is what `find` is for. 
+
+
+
+

@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+CONFIGPATH = "config.ini"
 
 #################################################
 # Rehearsal Files Generator                     #
@@ -19,8 +20,8 @@ import subprocess
 
 argparser = argparse.ArgumentParser(description="Generate rehearsal part-files from source files. The default is MIDI to MIDI, but MuseScore input and MP3 output is also supported (if you have MuseScore installed).")
 argparser.add_argument("--layout", action='store', help="choose a layout to disambiguate with")
-argparser.add_argument("--version", action='version', version='0.2')
-argparser.add_argument("--config", action='store', default="config.ini", help="path to the configuration file")
+argparser.add_argument("--version", action='version', version='0.2.1')
+argparser.add_argument("--config", action='store', default=CONFIGPATH, help="path to the configuration file")
 argparser.add_argument("--verbose", action='store_true', help="print debug messages")
 argparser.add_argument("--musescore", action='store_true', help="begin by converting from .mscz format; requires MuseScore")
 argparser.add_argument("--mp3", action='store_true', help="finish by rendering part-MIDIs to MP3; also requires MuseScore")

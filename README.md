@@ -17,8 +17,8 @@ MIDIs will also be output for each part.
 ## Setup
 
 Put this whereever you normally put random shell scripts. 
-If you do that you might want to put `config.ini` somewhere else - modify the second line of the file like so: 
+If you do that you might want to put `config.ini` somewhere else - modify the second line of `Subito.py` like so: 
 
-```lang=python3
+```python3
 CONFIGPATH = "/path/to/your/config.ini"
 ```

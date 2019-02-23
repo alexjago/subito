@@ -79,7 +79,10 @@ cfg = configparser.ConfigParser()
 
 # set defaults here...
 
-cfg.read(args.config)
+if not cfg.read(args.config) and args.config == CONFIGPATH:
+    backuppath = os.path.join(sys.path[0], "config.ini")
+    print("No configuration read. You almost definitely didn't want this. Trying "+backuppath+" instead.")
+    cfg.read(backuppath)
 
 printv(*cfg.sections())
 
@@ -359,7 +362,7 @@ def mainboi(infile, outdir, layoutPriority):
                 layouts[npl] = nl[npl]
                 chosen_layout = npl
             elif opt.strip().isdigit():
-                chosen_layout = candidates[int(opt)]
+                chosen_layout = candidates[int(opt) - 1] # that minus-one is very important
             else:
                 print("Selecting option [1]")
                 chosen_layout = candidates[0]
@@ -455,11 +458,16 @@ if os.path.isdir(args.inpath):
                        universal_newlines=True)\
         .stdout.strip().split(sep="\n")
 
+    printv("Sources:", sources)
+
+    if not sources or (sources == ['']):
+        print("Could not find any matching files to process.")
+        exit(1)
+
     for s in sources:
-
         # we should respect the subdirectory structure if there is one
-
-        subdir = os.path.join(args.outpath, os.path.dirname(os.path.relpath(s, args.inpath)))
+        printv("Source path:", s)
+        subdir = os.path.join(args.outpath, os.path.dirname(os.path.relpath(s, args.inpath))) # This is failing due to `sources = ['']`
         printv(subdir)
         if not os.path.isdir(subdir):
             os.mkdir(subdir)

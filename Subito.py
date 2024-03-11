@@ -11,6 +11,7 @@ import argparse
 import csv
 import os.path
 import os
+import platform
 import sys
 import re
 import subprocess
@@ -26,6 +27,8 @@ argparser.add_argument("--verbose", action='store_true', help="print debug messa
 argparser.add_argument("--musescore", action='store_true', help="begin by converting from .mscz format; requires MuseScore")
 argparser.add_argument("--mp3", action='store_true', help="finish by rendering part-MIDIs to MP3; also requires MuseScore")
 argparser.add_argument("--filter", action='store', default="*", help="filter files by name, not just extension; be sure to quote the pattern to prevent shell expansion")
+argparser.add_argument("--velocity", action='store_true', help="set velocity, not volumes")
+argparser.add_argument("--wav", action='store_true', help="use Timidity to export WAV instead")
 argparser.add_argument("inpath", action='store', nargs='?', default='{}'.format(os.getcwd()), metavar="SOURCE", help="specify a file/directory for conversion input")
 argparser.add_argument("outpath", action='store', nargs='?', default='{}'.format(os.getcwd()), metavar="DESTDIR", help="specify a directory for conversion output")
 
@@ -264,6 +267,23 @@ layoutPriority = promptLayout(layoutPriority)
 printv("PARTS: ", parts)
 printv("LAYOUTS: ", layouts)
 
+def find_musescore():
+    '''Find MuseScore or else'''
+    import platform
+    import os.path
+    from pathlib import Path
+
+    if platform.system() == 'Darwin':
+        for app in ['MuseScore 4.app', 'MuseScore 3.app', 'MuseScore.app']:
+            p = Path('/Applications', app, 'Contents', 'MacOS', 'mscore')
+            if os.path.isfile(p):
+                return p
+    elif platform.system() == 'Linux':
+        return 'mscore'
+    else:
+        raise NotImplementedException("I don't know where I might find MuseScore on this system")
+
+
 # the meat of the script
 
 out_midis = [] # just a list of paths
@@ -278,10 +298,11 @@ def mainboi(infile, outdir, layoutPriority):
 
     printv("name: `{}`".format(name), "score_midi: `{}`".format(score_midi))
 
-    
+    mscore = find_musescore()
+    printv("Using the following as MuseScore if needed:", mscore)
 
     if musescore:
-        subprocess.run(["mscore",
+        subprocess.run([mscore,
                         "-o", score_midi,
                         infile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
@@ -392,14 +413,14 @@ def mainboi(infile, outdir, layoutPriority):
         partname = p[0]
         partid = 0
         for i in range(len(layouts[chosen_layout])):
-            if partname == layouts[chosen_layout][i][0]:
+            if p == layouts[chosen_layout][i]:
                 partid = i+1
 
-        printv(partname, partid)
         number = ''
         if len(p) > 1:
             number = p[1]
         partlabel = ''.join(p)
+        printv("name:", partname, "id:", partid, "label:", partlabel)
         filename = os.path.join(outdir, name + "_" + partlabel + os.path.extsep + 'mid')
 
         this_csv = csv.copy()
@@ -415,6 +436,13 @@ def mainboi(infile, outdir, layoutPriority):
                 lsp[5] = str(foregroundVolume)
                 printv(lsp)
 
+            # set velocity if we're doing that
+            if args.velocity and (len(lsp) == 6 and lsp[2] == "Note_on_c" and lsp[5] != "0"):
+                if lsp[0] == str(partid):
+                    lsp[5] = str(foregroundVolume)
+                else:
+                    lsp[5] = str(backgroundVolume)
+
             # instrument swapsies
             if (len(lsp)==5) and lsp[0] == str(partid) and lsp[2] == "Program_c" and lsp[4] == str(parts[partname][0]):
                 lsp[4] = str(parts[partname][1])
@@ -427,11 +455,16 @@ def mainboi(infile, outdir, layoutPriority):
 
         if args.mp3:
             mp3_name = filename[0:-3] + "mp3"
-            subprocess.run(['mscore',
+            subprocess.run([mscore,
                             '-o', mp3_name,
                             filename],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+        elif args.wav:
+            wav_name = filename[0:-3] + "wav"
+            subprocess.run(["timidity", "-OwM",
+                            '-o', wav_name,
+                            filename],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
 
 

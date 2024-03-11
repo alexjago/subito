@@ -22,3 +22,5 @@ If you do that you might want to put `config.ini` somewhere else - modify the se
 ```python3
 CONFIGPATH = "/path/to/your/config.ini"
 ```
+
+You'll also need `csvmidi` and `midicsv`, available from https://www.fourmilab.ch/webtools/midicsv/ 

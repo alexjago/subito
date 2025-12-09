@@ -140,7 +140,7 @@ def validPart(partKey, partDef, prompt=False):
 
     printv('partKey: {:20}\tpartDef: {:^8}'.format(partKey, partDef))
     
-    word = re.compile("^\w+")
+    word = re.compile(r"^\w+")
     if word.match(partKey.strip()):
         kk = partKey.strip()
         dd = validPartDef(partDef, prompt=prompt)
@@ -181,7 +181,7 @@ def validLayoutDef(layoutDef, prompt=False):
         printv("Note: layout contains no Parts.")
         return []
 
-    word = re.compile("^\w+")
+    word = re.compile(r"^\w+")
     for p in lp:
         
         name = p[0]
@@ -207,7 +207,7 @@ def validLayout(layoutKey, layoutDef, prompt=False):
        If `prompt = True` it will prompt you for a valid Name and/or
         Definition and recurse to ensure that it is valid.
     '''
-    word = re.compile("^\w+")
+    word = re.compile(r"^\w+")
     if word.match(layoutKey.strip()):
         kk = layoutKey.strip()
         dd = validLayoutDef(layoutDef, prompt=prompt)
@@ -313,7 +313,7 @@ def mainboi(infile, outdir, layoutPriority):
     # now we use csvmidi
 
     csv = subprocess.run(["midicsv", score_midi],
-                          stdout=subprocess.PIPE).stdout.decode('ascii').split('\n')
+                          stdout=subprocess.PIPE).stdout.decode('utf-8', errors='replace').split('\n')
 
     #printv("*** CSV OUTPUT ***")
     #printv(csv)

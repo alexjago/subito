@@ -5,3 +5,5 @@ beads.db-wal
 daemon.lock
 daemon.log
 daemon.pid
+beads.base.jsonl
+beads.base.meta.json

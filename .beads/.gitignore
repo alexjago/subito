@@ -1,0 +1,7 @@
+bd.sock
+beads.db
+beads.db-shm
+beads.db-wal
+daemon.lock
+daemon.log
+daemon.pid

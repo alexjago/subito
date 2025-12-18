@@ -502,8 +502,7 @@ if os.path.isdir(args.inpath):
         printv("Source path:", s)
         subdir = os.path.join(args.outpath, os.path.dirname(os.path.relpath(s, args.inpath))) # This is failing due to `sources = ['']`
         printv(subdir)
-        if not os.path.isdir(subdir):
-            os.mkdir(subdir)
+        os.makedirs(subdir, exist_ok=True)
         
         mainboi(s, subdir, layoutPriority)
 else:
